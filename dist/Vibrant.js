@@ -628,6 +628,7 @@ module.exports = MMCQ.quantize
         quality = 5;
       }
       image = new CanvasImage(sourceImage);
+      imageTransparency = image.isTransparent();
       try {
         imageData = image.getImageData();
         pixels = imageData.data;
@@ -750,7 +751,8 @@ module.exports = MMCQ.quantize
         DarkVibrant: this.DarkVibrantSwatch,
         DarkMuted: this.DarkMutedSwatch,
         LightVibrant: this.LightVibrantSwatch,
-        LightMuted: this.LightMuted
+        LightMuted: this.LightMuted,
+        Transparent: imageTransparency
       };
     };
 
@@ -844,6 +846,23 @@ module.exports = MMCQ.quantize
       this.width = this.canvas.width = image.width;
       this.height = this.canvas.height = image.height;
       this.context.drawImage(image, 0, 0, this.width, this.height);
+    }
+
+    function hasAlpha(ctx, canvas) {
+      var data = ctx.getImageData(0, 0, canvas.width, canvas.height).data,
+          hasAlphaPixels = false;
+
+      for (var i = 3, n = data.length; i < n; i += 4) {
+          if (data[i] < 255) {
+              hasAlphaPixels = 'transparent';
+              break;
+          }
+      }
+      return hasAlphaPixels;
+    }
+
+    CanvasImage.prototype.isTransparent = function() {
+      return hasAlpha(this.context, this.canvas);
     }
 
     CanvasImage.prototype.clear = function() {
